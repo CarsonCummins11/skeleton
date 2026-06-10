@@ -35,9 +35,6 @@ PUBSUB_REDIS_URL=redis://default:secret@redis_pubsub:6379
 SESSION_SECRET_KEY=<random-string>
 FRONTEND_URL=http://localhost:5173
 ENVIRONMENT=dev
-OPENAI_API_KEY=<your-openai-key>          # optional
-LANGFUSE_PUBLIC_KEY=<your-langfuse-key>   # optional
-LANGFUSE_SECRET_KEY=<your-langfuse-key>   # optional
 ```
 
 ### 2. Start the stack
@@ -116,9 +113,6 @@ cd frontend && bun install && bun run dev
 | `SESSION_SECRET_KEY` | Yes | Secret key for signing session cookies |
 | `FRONTEND_URL` | Yes | Allowed CORS origin (e.g. `http://localhost:5173`) |
 | `ENVIRONMENT` | Yes | `dev` or `prod` |
-| `OPENAI_API_KEY` | No | OpenAI API key |
-| `LANGFUSE_PUBLIC_KEY` | No | Langfuse observability public key |
-| `LANGFUSE_SECRET_KEY` | No | Langfuse observability secret key |
 
 In production, `DATABASE_URL`, `CACHE_REDIS_URL`, `PUBSUB_REDIS_URL`, `FRONTEND_URL`, `ENVIRONMENT`, and `SESSION_SECRET_KEY` are all injected automatically by Terraform from the provisioned RDS and ElastiCache endpoints — you do not need to manage them manually.
 
