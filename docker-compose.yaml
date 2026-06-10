@@ -1,0 +1,82 @@
+services:
+  api:
+    build: 
+      context: .
+      dockerfile: dockerfile.api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./api:/api
+      - /api/.venv
+    env_file:
+      - api/.env
+    depends_on:
+      - db
+    networks:
+      - app-network
+    command: ["/api/.venv/bin/uvicorn", "route_server:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+
+  worker:
+    build: 
+      context: .
+      dockerfile: dockerfile.worker
+    volumes:
+      - ./api:/api
+      - /api/.venv
+    env_file:
+      - api/.env
+    depends_on:
+      - db
+      - redis_cache
+      - api
+    networks:
+      - app-network
+
+  frontend:
+    build:
+      context: .
+      dockerfile: dockerfile.frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - api
+    networks:
+      - app-network
+
+  db:
+    image: postgres:13-alpine
+    environment:
+      - POSTGRES_USER=fastapi
+      - POSTGRES_PASSWORD=secret
+      - POSTGRES_DB=fastapi_db
+    networks:
+      - app-network
+    ports:
+      - "5432:5432"
+
+  redis_cache:
+    image: redis:alpine
+    environment:
+      - REDIS_PASSWORD=secret
+      - REDIS_HOST=redis_cache
+    ports:
+      - "6379:6379"
+    networks:
+      - app-network
+  
+  redis_pubsub:
+    image: redis:alpine
+    environment:
+      - REDIS_PASSWORD=secret
+      - REDIS_HOST=redis_pubsub
+    ports:
+        - "6380:6380"
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge

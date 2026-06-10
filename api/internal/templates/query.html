@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Query Database - Intranet{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>Database Query</h2>
+    <form method="get" action="/internal/query" class="query-form">
+        <div class="form-group">
+            <label for="query">SQL Query:</label>
+            <textarea id="query" name="query" class="form-control" rows="10" placeholder="Enter your SQL query here...">{{ query or "" }}</textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Execute Query</button>
+    </form>
+</div>
+
+<div class="card">
+    <h3>Database Management</h3>
+    <form method="post" action="/internal/query/reset-database" class="reset-form" onsubmit="return confirm('Are you sure you want to completely reset the database? This will delete ALL data and rerun applets.sql. This action cannot be undone.');">
+        <button type="submit" class="btn btn-danger">Reset Database & Rerun applets.sql</button>
+    </form>
+</div>
+
+{% if error %}
+<div class="card error">
+    <h3>Error</h3>
+    <p>{{ error }}</p>
+</div>
+{% endif %}
+
+{% if success %}
+<div class="card success">
+    <h3>Success</h3>
+    <p>{{ success }}</p>
+</div>
+{% endif %}
+
+{% if column_headers and rows %}
+<div class="card">
+    <h3>Query Results</h3>
+    <div class="query-results">
+        <table class="table">
+            <thead>
+                <tr>
+                    {% for header in column_headers %}
+                    <th>{{ header }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in rows %}
+                <tr>
+                    {% for cell in row %}
+                    <td>{{ cell }}</td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+{% endblock %} 

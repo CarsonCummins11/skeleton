@@ -1,0 +1,292 @@
+{% extends "base.html" %}
+
+{% block title %}{{ job_type }} Queue{% endblock %}
+
+{% block content %}
+<div class="wq-queue">
+    <div class="queue-header">
+        <h2>{{ job_type }} Queue</h2>
+        <div class="status-filters">
+            <a href="/internal/wq/queue/{{ job_type }}" class="filter-link {% if not status %}active{% endif %}">All</a>
+            <a href="/internal/wq/queue/{{ job_type }}?status=not_started" class="filter-link {% if status == 'not_started' %}active{% endif %}">Not Started</a>
+            <a href="/internal/wq/queue/{{ job_type }}?status=in_progress" class="filter-link {% if status == 'in_progress' %}active{% endif %}">In Progress</a>
+            <a href="/internal/wq/queue/{{ job_type }}?status=completed" class="filter-link {% if status == 'completed' %}active{% endif %}">Completed</a>
+            <a href="/internal/wq/queue/{{ job_type }}?status=dlq" class="filter-link {% if status == 'dlq' %}active{% endif %}">DLQ</a>
+        </div>
+    </div>
+
+    {% if request.query_params.get('success') %}
+        <div class="success-message">
+            {{ request.query_params.get('success') }}
+        </div>
+    {% endif %}
+
+    {% if jobs %}
+        <div class="jobs-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Job ID</th>
+                        <th>Status</th>
+                        <th>Created At</th>
+                        <th>Retry Count</th>
+                        <th>Last Retry</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for job in jobs %}
+                    <tr class="job-row status-{{ job.status }}">
+                        <td>
+                            <a href="/internal/wq/job/{{ job.job_type }}/{{ job.job_id }}" class="job-link">
+                                {{ job.job_id[:8] }}...
+                            </a>
+                        </td>
+                        <td>
+                            <span class="status-badge status-{{ job.status }}">
+                                {% if job.status == 0 %}Not Started
+                                {% elif job.status == 1 %}In Progress
+                                {% elif job.status == 2 %}Completed
+                                {% elif job.status == 3 %}DLQ
+                                {% else %}Unknown
+                                {% endif %}
+                            </span>
+                        </td>
+                        <td>{{ job.created_at | format_timestamp }}</td>
+                        <td>{{ job.retry_count }}</td>
+                        <td>
+                            {% if job.last_retry_at %}
+                                {{ job.last_retry_at | format_timestamp }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td class="actions">
+                            <a href="/internal/wq/job/{{ job.job_type }}/{{ job.job_id }}" class="btn btn-small btn-primary">View</a>
+                            {% if job.status == 3 %}
+                                <form method="POST" action="/internal/wq/job/{{ job.job_type }}/{{ job.job_id }}/revive" style="display: inline;">
+                                    <button type="submit" class="btn btn-small btn-success" onclick="return confirm('Are you sure you want to revive this job?')">Revive</button>
+                                </form>
+                            {% endif %}
+                            <form method="POST" action="/internal/wq/job/{{ job.job_type }}/{{ job.job_id }}/delete" style="display: inline;">
+                                <button type="submit" class="btn btn-small btn-danger" onclick="return confirm('Are you sure you want to delete this job? This action cannot be undone.')">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="no-data">
+            <p>No jobs found{% if status %} with status "{{ status }}"{% endif %}.</p>
+        </div>
+    {% endif %}
+
+    <div class="back-link">
+        <a href="/internal/wq" class="btn btn-secondary">← Back to Dashboard</a>
+    </div>
+</div>
+
+<style>
+.wq-queue {
+    padding: 20px;
+}
+
+.queue-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.queue-header h2 {
+    margin: 0;
+    color: #333;
+}
+
+.status-filters {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.filter-link {
+    padding: 6px 12px;
+    text-decoration: none;
+    border-radius: 4px;
+    color: #666;
+    border: 1px solid #ddd;
+    transition: all 0.2s;
+}
+
+.filter-link:hover {
+    background-color: #f5f5f5;
+    color: #333;
+}
+
+.filter-link.active {
+    background-color: #3498db;
+    color: white;
+    border-color: #3498db;
+}
+
+.success-message {
+    background-color: #d4edda;
+    color: #155724;
+    padding: 12px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    border: 1px solid #c3e6cb;
+}
+
+.jobs-table {
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+}
+
+.jobs-table table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.jobs-table th,
+.jobs-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+.jobs-table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    color: #333;
+}
+
+.job-row:hover {
+    background-color: #f8f9fa;
+}
+
+.job-link {
+    color: #3498db;
+    text-decoration: none;
+    font-family: monospace;
+}
+
+.job-link:hover {
+    text-decoration: underline;
+}
+
+.status-badge {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.85em;
+    font-weight: 500;
+}
+
+.status-badge.status-0 {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.status-badge.status-1 {
+    background-color: #d1ecf1;
+    color: #0c5460;
+}
+
+.status-badge.status-2 {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.status-badge.status-3 {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.actions {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+}
+
+.btn {
+    display: inline-block;
+    padding: 6px 12px;
+    text-decoration: none;
+    border-radius: 4px;
+    font-weight: 500;
+    transition: background-color 0.2s;
+    border: none;
+    cursor: pointer;
+    font-size: 0.85em;
+}
+
+.btn-small {
+    padding: 4px 8px;
+    font-size: 0.8em;
+}
+
+.btn-primary {
+    background-color: #3498db;
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #2980b9;
+}
+
+.btn-success {
+    background-color: #27ae60;
+    color: white;
+}
+
+.btn-success:hover {
+    background-color: #229954;
+}
+
+.btn-danger {
+    background-color: #e74c3c;
+    color: white;
+}
+
+.btn-danger:hover {
+    background-color: #c0392b;
+}
+
+.btn-secondary {
+    background-color: #95a5a6;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background-color: #7f8c8d;
+}
+
+.no-data {
+    text-align: center;
+    padding: 40px;
+    color: #666;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.back-link {
+    margin-top: 20px;
+}
+</style>
+
+<script>
+// Add a simple timestamp formatter
+document.addEventListener('DOMContentLoaded', function() {
+    // This would need to be implemented server-side, but for now we'll just show the raw timestamp
+    // In a real implementation, you'd want to format timestamps properly
+});
+</script>
+{% endblock %} 

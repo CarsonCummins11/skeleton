@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Intranet{% endblock %}</title>
+    <link rel="stylesheet" href="/internal/static/css/common.css">
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <div class="container">
+        {% if user %}
+        <div class="header">
+            <h1>Intranet Dashboard</h1>
+            <div class="nav">
+                <a href="/internal/" {% if request.url.path == "/internal/" %}class="active"{% endif %}>User Information</a>
+                <a href="/internal/query" {% if request.url.path == "/internal/query" %}class="active"{% endif %}>Query Database</a>
+                <a href="/internal/create-user" {% if request.url.path == "/internal/create-user" %}class="active"{% endif %}>Create User</a>
+                <a href="/internal/classes" {% if request.url.path.startswith("/internal/classes") %}class="active"{% endif %}>Classes</a>
+                <a href="/internal/wq" {% if request.url.path.startswith("/internal/wq") %}class="active"{% endif %}>Work Queue</a>
+                <a href="/internal/logout">Logout ({{ user.username }})</a>
+            </div>
+        </div>
+        {% endif %}
+        
+        <main>
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+</body>
+</html> 

@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}Intranet User{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>Intranet User</h2>
+    <p>Welcome, {{ user.full_name }}!</p>
+</div>
+
+<div class="card">
+    <div class="user-info">
+        <h4>Current User</h4>
+        <p><strong>Username:</strong> {{ user.username }}</p>
+        <p><strong>Full Name:</strong> {{ user.full_name }}</p>
+        <p><strong>Profile Image:</strong> <a href="{{ user.profile_image_url }}" target="_blank">{{ user.profile_image_url }}</a></p>
+    </div>
+</div>
+
+<div class="card">
+    <h3>Quick Actions</h3>
+    <div class="nav">
+        <a href="/internal/logout" class="btn">Logout</a>
+    </div>
+</div>
+{% endblock %} 

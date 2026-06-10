@@ -1,0 +1,325 @@
+{% extends "base.html" %}
+
+{% block title %}Job Details{% endblock %}
+
+{% block content %}
+<div class="job-detail">
+    {% if error %}
+        <div class="error-message">
+            {{ error }}
+        </div>
+    {% endif %}
+
+    {% if request.query_params.get('success') %}
+        <div class="success-message">
+            {{ request.query_params.get('success') }}
+        </div>
+    {% endif %}
+
+    {% if job %}
+        <div class="job-header">
+            <h2>Job Details</h2>
+            <div class="job-actions">
+                {% if job.status == 3 %}
+                    <form method="POST" action="/internal/wq/job/{{ job.job_type }}/{{ job.job_id }}/revive" style="display: inline;">
+                        <button type="submit" class="btn btn-success" onclick="return confirm('Are you sure you want to revive this job?')">Revive Job</button>
+                    </form>
+                {% endif %}
+                <form method="POST" action="/internal/wq/job/{{ job.job_type }}/{{ job.job_id }}/delete" style="display: inline;">
+                    <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this job? This action cannot be undone.')">Delete Job</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="job-info">
+            <div class="info-section">
+                <h3>Basic Information</h3>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <label>Job ID:</label>
+                        <span class="job-id">{{ job.job_id }}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Job Type:</label>
+                        <span>{{ job.job_type }}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Status:</label>
+                        <span class="status-badge status-{{ job.status }}">
+                            {% if job.status == 0 %}Not Started
+                            {% elif job.status == 1 %}In Progress
+                            {% elif job.status == 2 %}Completed
+                            {% elif job.status == 3 %}DLQ
+                            {% else %}Unknown
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="info-item">
+                        <label>Created At:</label>
+                        <span>{{ job.created_at | format_timestamp }}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Retry Count:</label>
+                        <span>{{ job.retry_count }}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Last Retry:</label>
+                        <span>
+                            {% if job.last_retry_at %}
+                                {{ job.last_retry_at | format_timestamp }}
+                            {% else %}
+                                Never
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            {% if job.error_message %}
+            <div class="info-section">
+                <h3>Error Message</h3>
+                <div class="error-content">
+                    <pre>{{ job.error_message }}</pre>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="info-section">
+                <h3>Job Payload</h3>
+                <div class="payload-content">
+                    <pre>{{ job.payload | format_json }}</pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="navigation-links">
+            <a href="/internal/wq/queue/{{ job.job_type }}" class="btn btn-secondary">← Back to Queue</a>
+            <a href="/internal/wq" class="btn btn-secondary">← Back to Dashboard</a>
+        </div>
+    {% else %}
+        <div class="no-data">
+            <p>Job not found.</p>
+            <a href="/internal/wq" class="btn btn-secondary">← Back to Dashboard</a>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+.job-detail {
+    padding: 20px;
+}
+
+.job-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.job-header h2 {
+    margin: 0;
+    color: #333;
+}
+
+.job-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.error-message {
+    background-color: #f8d7da;
+    color: #721c24;
+    padding: 12px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    border: 1px solid #f5c6cb;
+}
+
+.success-message {
+    background-color: #d4edda;
+    color: #155724;
+    padding: 12px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    border: 1px solid #c3e6cb;
+}
+
+.job-info {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+    overflow: hidden;
+}
+
+.info-section {
+    padding: 20px;
+    border-bottom: 1px solid #eee;
+}
+
+.info-section:last-child {
+    border-bottom: none;
+}
+
+.info-section h3 {
+    margin: 0 0 15px 0;
+    color: #333;
+    font-size: 1.1em;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 15px;
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.info-item label {
+    font-weight: 600;
+    color: #666;
+    font-size: 0.9em;
+}
+
+.info-item span {
+    color: #333;
+}
+
+.job-id {
+    font-family: monospace;
+    background-color: #f8f9fa;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.9em;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.85em;
+    font-weight: 500;
+    width: fit-content;
+}
+
+.status-badge.status-0 {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.status-badge.status-1 {
+    background-color: #d1ecf1;
+    color: #0c5460;
+}
+
+.status-badge.status-2 {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.status-badge.status-3 {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.error-content,
+.payload-content {
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 4px;
+    padding: 15px;
+    overflow-x: auto;
+}
+
+.error-content pre {
+    margin: 0;
+    color: #721c24;
+    font-family: monospace;
+    font-size: 0.9em;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.payload-content pre {
+    margin: 0;
+    color: #333;
+    font-family: monospace;
+    font-size: 0.9em;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.navigation-links {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.btn {
+    display: inline-block;
+    padding: 8px 16px;
+    text-decoration: none;
+    border-radius: 4px;
+    font-weight: 500;
+    transition: background-color 0.2s;
+    border: none;
+    cursor: pointer;
+    font-size: 0.9em;
+}
+
+.btn-success {
+    background-color: #27ae60;
+    color: white;
+}
+
+.btn-success:hover {
+    background-color: #229954;
+}
+
+.btn-danger {
+    background-color: #e74c3c;
+    color: white;
+}
+
+.btn-danger:hover {
+    background-color: #c0392b;
+}
+
+.btn-secondary {
+    background-color: #95a5a6;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background-color: #7f8c8d;
+}
+
+.no-data {
+    text-align: center;
+    padding: 40px;
+    color: #666;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.no-data p {
+    margin-bottom: 20px;
+}
+</style>
+
+<script>
+// Add a simple JSON formatter
+document.addEventListener('DOMContentLoaded', function() {
+    // This would need to be implemented server-side, but for now we'll just show the raw JSON
+    // In a real implementation, you'd want to format JSON properly
+});
+</script>
+{% endblock %} 

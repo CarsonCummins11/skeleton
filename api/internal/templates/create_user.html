@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Create User - Intranet{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>Create New User</h2>
+    
+    {% if error %}
+    <div class="alert alert-error">
+        {{ error }}
+    </div>
+    {% endif %}
+    
+    {% if success %}
+    <div class="alert alert-success">
+        {{ success }}
+    </div>
+    {% endif %}
+    
+    <form method="post" action="/internal/create-user">
+        <div class="form-group">
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username" class="form-control" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" class="form-control" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="full_name">Full Name:</label>
+            <input type="text" id="full_name" name="full_name" class="form-control" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="profile_image_url">Profile Image URL:</label>
+            <input type="url" id="profile_image_url" name="profile_image_url" class="form-control" value="https://carsoncummins.com/ico.png">
+        </div>
+        
+        <button type="submit" class="btn btn-primary">Create User</button>
+    </form>
+</div>
+
+{% if user_info %}
+<div class="card">
+    <h3>User Details</h3>
+    <div class="user-info">
+        <p><strong>Username:</strong> {{ user_info.username }}</p>
+        <p><strong>Full Name:</strong> {{ user_info.full_name }}</p>
+        <p><strong>Profile Image:</strong> <a href="{{ user_info.profile_image_url }}" target="_blank">{{ user_info.profile_image_url }}</a></p>
+    </div>
+</div>
+{% endif %}
+{% endblock %} 
