@@ -1,7 +1,7 @@
 # Project Skeleton
-
-A full-stack web application skeleton with a FastAPI backend, React frontend, background worker, and Terraform infrastructure for AWS deployment.
-
+This is a basic skeleton that gives you pretty much everything you need to create a modern webapp and associated infra. 
+I've spent a long time building different prod apps at different companies, and this is the best mix of simple and easy to versatile and powerful.
+Although I will say this stack is not very cheap, it comes with probably a 30$ minimum monthly AWS bill. You could make that cheaper by pre-reserving instances though, and you could use spot instances for the workers because they can support perf degredation. 
 ## Stack
 
 | Layer | Technology |
